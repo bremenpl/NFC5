@@ -103,7 +103,8 @@ static uint8_t GB[] = {0x46, 0x66, 0x6d, 0x01, 0x01, 0x11, 0x02, 0x02, 0x07, 0x8
 /* APDUs communication data */    
 static uint8_t ndefSelectApp[] = { 0x00, 0xA4, 0x04, 0x00, 0x07, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01, 0x00 };
 static uint8_t ccSelectFile[] = { 0x00, 0xA4, 0x00, 0x0C, 0x02, 0xE1, 0x03};
-static uint8_t readBynary[] = { 0x00, 0xB0, 0x00, 0x00, 0x0F };
+static uint8_t ndefSelectFile[] = { 0x00, 0xA4, 0x00, 0x0C, 0x02, 0x00, 0x01};
+static uint8_t readBinary[] = { 0x00, 0xB0, 0x00, 0x09, 0x0A };
 /*static uint8_t ppseSelectApp[] = { 0x00, 0xA4, 0x04, 0x00, 0x0E, 0x32, 0x50, 0x41, 0x59, 0x2E, 0x53, 0x59, 0x53, 0x2E, 0x44, 0x44, 0x46, 0x30, 0x31, 0x00 };*/
 
 /* P2P communication data */    
@@ -141,7 +142,7 @@ static union {
     rfalNfcDepDevice  nfcDepDev;                                         /* NFC-DEP Device details                          */
 }gDevProto;
 
-static bool doWakeUp = false;                /*!< by default do not perform Wake-Up               */
+static bool doWakeUp = true;                /*!< by default do not perform Wake-Up               */
 static uint8_t state = DEMO_ST_FIELD_OFF;    /*!< Actual state, starting with RF field turned off */
   
 
@@ -739,10 +740,18 @@ void demoSendAPDUs( void )
     platformLog(" Select NDEF App successfully \r\n");
     
     /* Exchange APDU: Select Capability Container File */
-    err = demoIsoDepBlockingTxRx(&gDevProto.isoDepDev, ccSelectFile, sizeof(ccSelectFile), gRxBuf.rxBuf, sizeof(gRxBuf.rxBuf), &rxLen);
+    //err = demoIsoDepBlockingTxRx(&gDevProto.isoDepDev, ccSelectFile, sizeof(ccSelectFile), gRxBuf.rxBuf, sizeof(gRxBuf.rxBuf), &rxLen);
+    err = demoIsoDepBlockingTxRx(&gDevProto.isoDepDev, ndefSelectFile,
+    		sizeof(ndefSelectFile), gRxBuf.rxBuf, sizeof(gRxBuf.rxBuf), &rxLen);
     
     /* Exchange APDU: Read Capability Container File  */
-    err = demoIsoDepBlockingTxRx(&gDevProto.isoDepDev, readBynary, sizeof(readBynary), gRxBuf.rxBuf, sizeof(gRxBuf.rxBuf), &rxLen);
+    err = demoIsoDepBlockingTxRx(&gDevProto.isoDepDev, readBinary,
+    		sizeof(readBinary), gRxBuf.rxBuf, sizeof(gRxBuf.rxBuf), &rxLen);
+
+    // 10 bytes NDEF reading demo
+    char tmp[11] = { 0 };
+    memcpy(tmp, gRxBuf.rxBuf, 10);
+    platformLog("NDEF file: %s \r\n", tmp);
   }
 }
 
